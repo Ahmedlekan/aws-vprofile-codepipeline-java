@@ -1,71 +1,145 @@
+# AWS RDS MySQL Setup & Connection Guide
 
-1. Create a database
+### Database Creation
 
-Engine options
+1. Steps to create MySQL RDS instance:
 
-Mysql
+ - Navigate to AWS RDS service
+ 
+ - Click "Create database"
+ 
+ - Select "Standard create" and choose MySQL engine
 
+![Image](https://github.com/user-attachments/assets/b9dbac58-1b34-428a-bb6d-5485b175823c)
 
-Availability and durability
+2. Configure instance settings:
 
-Settings
+ - Availability and durability: Select based on your requirements
 
-Instance configuration
+![Image](https://github.com/user-attachments/assets/8d6e14d1-058d-45c1-b96a-2ac2e89c0f92)
 
-Storage
+-  Settings
+![Image](https://github.com/user-attachments/assets/bb146127-fcc8-4332-a207-c8ff2a5fc7fe)
+ 
+ - Instance configuration: Choose appropriate instance class
 
+![Image](https://github.com/user-attachments/assets/e2148ab3-8232-4804-9eff-8a680e2c6b1f)
+ 
+ - Storage: Allocate sufficient storage with autoscaling if needed
 
-Connectivity
-
-
-Database authentication
-
-
-Additional configuration
-
-
-Make sure to copy your password and save it. 
-
-
-
-2. Security Groups
-
-Edit rds security group to allow traffic from beanstalk instance.
+![Image](https://github.com/user-attachments/assets/acfcdb4a-e84a-4d14-985e-26ce8b2c3465)
 
 
+3. Set connectivity options:
+
+- Configure VPC and subnet group
+
+![Image](https://github.com/user-attachments/assets/9784fa3c-22d4-40d3-b80b-db942ea8760b)
 
 
+4. Set database authentication:
 
-3. Confirm your database is connected to your ec2 instance
+  - Choose password authentication
+  
+  - Set username as admin
 
-1. Connect to your local ec2 instance ssh to your local machine.
+  - Create a strong password (save this securely)
 
-Open an SSH client.
+  - Databae options
 
-Locate your private key file. The key used to launch this instance is private_key_file
+![Image](https://github.com/user-attachments/assets/62605088-1ae3-4ccd-88b0-5fee5c5d79e5)
+  
 
-Run this command, if necessary, to ensure your key is not publicly viewable.
+5. Review and create database
+
+⚠️ Important: Save the database endpoint and credentials securely as they will be needed later.
+
+
+### Security Group Configuration
+
+To allow traffic from your Beanstalk/EC2 instance:
+
+- Navigate to EC2 > Security Groups
+
+- Locate the RDS security group
+
+- Edit inbound rules:
+
+   - Add rule: MySQL/Aurora (port 3306)
+   
+   - Source: Custom > Select your Beanstalk/EC2 instance security group
+   
+   - Save rules
+
+
+### Database Connection Verification
+
+Connect from your EC2 instance to verify the connection:
+
+- Open an SSH client.
+
+- Locate your private key file. The key used to launch this instance is private_key_file
+
+```bash
+# Connect to your EC2 instance
 
 chmod 400 "private_key_file"
 
-Connect to your instance using its Public DNS:
-ssh -i "vprofile-awscicd.pem" ec2-user@your_instance_ip
-
-Login to the root user with sudo -i
-
-Run this command
-
+ssh -i "vprofile-awscicd.pem" ec2-user@<your_instance_ip>
+  
+# Switch to root
+sudo -i
+  
+# Install MySQL client
 dnf search mysql
 dnf install mariadb105
-mysql -h your_rds_endpoint -u admin -p
-enter your password
+  
+# Connect to RDS
+mysql -h <your_rds_endpoint> -u admin -p
+  
+# When prompted, enter your RDS password
+# Verify connection
 USE accounts;
-show databases;
-exit
-wget https://raw.githubusercontent.com/Ahmedlekan/devops-project/refs/heads/main/src/main/resources/db_backup.sql
-ls -la
-you should see "db_backup.sql"
-mysql -h your_rds_endpoint -u admin -p < db_backup.sql
-enter your password
-USE accounts;
-show tables;
+SHOW DATABASES;
+EXIT;
+```
+
+### Database Initialization
+
+Initialize your database with the schema and initial data:
+
+```bash
+  # Download database backup
+  wget https://raw.githubusercontent.com/Ahmedlekan/devops-project/main/src/main/resources/db_backup.sql
+  
+  # Verify download
+  ls -la  # Should show db_backup.sql
+  
+  # Import database
+  mysql -h <your_rds_endpoint> -u admin -p < db_backup.sql
+  
+  # Verify import
+  mysql -h <your_rds_endpoint> -u admin -p
+  USE accounts;
+  SHOW TABLES;
+  EXIT;
+```
+
+### Troubleshooting
+
+- Connection issues: Verify security group rules and network ACLs
+
+- Authentication errors: Double-check username/password
+
+- Import errors: Ensure the SQL file downloaded completely
+
+### Best Practices for Production
+
+- Always store credentials in AWS Secrets Manager
+
+- Enable automated backups for your RDS instance
+
+- Configure monitoring alerts for database metrics
+
+- Consider using IAM database authentication for better security
+
