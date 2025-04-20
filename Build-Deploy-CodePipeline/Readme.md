@@ -88,8 +88,11 @@ After initial pipeline creation:
 
 - Click "Attach policies"
 
-- Search for and add: AdministratorAccess-AWSElasticBeanstalk
-
+- Search for and add:
+```bash
+AdministratorAccess-AWSElasticBeanstalk
+```
+                    
 - Click "Attach policy"
 
 Recommended Permissions
